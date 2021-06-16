@@ -46,7 +46,7 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
   private
 
   def allowed_values?(data)
-    (data.keys - VALUES_WHITELIST).empty? ? true : false
+    (data.keys - VALUES_WHITELIST).empty? ? false : true
   end
 
   def generate_postfix
@@ -81,7 +81,7 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
   end
 
   def put(key, value)
-    raise ArgumentError, 'Unsupported values keys' unless allowed_values?(value)
+    raise ArgumentError.new('Unsupported values keys') unless allowed_values?(value)
 
     postfix = generate_postfix
     key = "/#{@client.prefix}/#{key.split('.').reverse.join('/')}/#{postfix}"
