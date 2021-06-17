@@ -8,10 +8,10 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
   VALUES_WHITELIST = %w[host mail port priority text ttl group].freeze
 
   def delete(data = {})
-    data = HashWithIndifferentAccessCustom.new(data)
+    data = HashWithIndifferentAccessCustom.new(data).attributes
     hostname = nil
-    if data[:hostname]
-      hostname = data[:hostname]
+    if data[:name]
+      hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
     elsif data[:host]
       hostname = list.select { |record| record["host"] == data[:host] }[0]["hostname"]
     end
@@ -24,7 +24,7 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
   end
 
   def add(data = {})
-    put(@namespace, HashWithIndifferentAccessCustom.new(data))
+    put(@namespace, HashWithIndifferentAccessCustom.new(data).attributes)
   end
 
   def list(level = 1)
@@ -36,11 +36,17 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
         one_level_records << record
       end
     end
-    one_level_records
+    one_level_records.map do |record|
+      hostname = record.delete("hostname")
+      record.merge!({"name" => (hostname.split('/').reverse - @namespace.split('.') - [@client.prefix]).reject!(&:empty?).join('.')})
+    end
   end
 
   def list_all
-    fetch('')
+    fetch('').map do |record|
+      hostname = record.delete("hostname")
+      record.merge!({"name" => (hostname.split('/').reverse - @namespace.split('.') - [@client.prefix]).reject!(&:empty?).join('.')})
+    end
   end
 
   private
@@ -51,7 +57,7 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
 
   def generate_postfix
     postfixes = list.collect do |record|
-                  record['hostname']
+                  record['name']
                 end.map { |key| key.split('/').last }
     if postfixes.empty?
       "#{@client.postfix}1"
@@ -85,16 +91,26 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
 
     postfix = generate_postfix
     key = "/#{@client.prefix}/#{key.split('.').reverse.join('/')}/#{postfix}"
-    (value.keys - VALUES_WHITELIST).each { |k| value.delete(k) }
+    #(value.keys - VALUES_WHITELIST).each { |k| value.delete(k) }
     payload = { key: Base64.encode64(key), value: Base64.encode64(value.to_json) }.to_json
-    CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/put", :post, {}, payload)
+    response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/put", :post, {}, payload)
+    if response.code == 200
+      payload 
+    else
+      response.code
+    end
   end
 
   def remove(hostname)
     payload = {
       key: Base64.encode64(hostname)
     }.to_json
-    CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
+    response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
+    if response.code == 200
+      payload 
+    else
+      response.code
+    end
   rescue StandardError => e
     @logger.error(e.message)
   end

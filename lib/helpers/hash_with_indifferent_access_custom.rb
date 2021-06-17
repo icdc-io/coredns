@@ -1,5 +1,5 @@
 class HashWithIndifferentAccessCustom
-  attr_reader :keys, :values
+  attr_reader :keys, :values, :attributes
   
   def initialize(hash = {})
     @attributes = Hash.new
@@ -23,5 +23,9 @@ class HashWithIndifferentAccessCustom
   def delete(key)
     @attributes.delete(key)
     self.class.new(@attributes)
+  end
+
+  def to_json
+    @attributes.to_json
   end
 end
