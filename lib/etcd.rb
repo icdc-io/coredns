@@ -17,6 +17,10 @@ class CoreDns::Etcd
     CoreDns::Etcd::Domain.new(self, hostname)
   end
 
+  def zone(hostname)
+    CoreDns::Etcd::DnsZone.new(self, hostname)
+  end
+
   private
 
   def initialize_params
