@@ -27,6 +27,10 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
     put(@namespace, HashWithIndifferentAccessCustom.new(data).attributes)
   end
 
+  def show
+    self.class.new(@client, '').list_all.select{|x| x["name"] == namespace}[0]
+  end
+
   def list(level = 1)
     one_level_records = []
     fetch('').each do |record|
