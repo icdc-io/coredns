@@ -14,8 +14,9 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
       hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
     elsif data[:host]
       hostname = list.select { |record| record["host"] == data[:host] }[0]["hostname"]
+    elsif list.first.dig("metadata","zone")
+      hostname = "apex.dns.#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
     end
-
     remove(hostname) if hostname
   end
 
