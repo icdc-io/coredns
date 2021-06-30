@@ -5,7 +5,7 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
   VALUES_WHITELIST = %w[host metadata].freeze 
 
   def add(data = {})
-    data[:metadata] = {:zone => true}
+    data[:metadata][:zone] = true
     return "need to add {:host =>}" unless data[:host]
     put( @namespace, HashWithIndifferentAccessCustom.new(data).attributes)
   end
