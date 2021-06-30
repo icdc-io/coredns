@@ -18,7 +18,7 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
   def list_all
     fetch('').select { |dns| dns.dig("metadata", "zone") }
   end
-  
+
  private
 
  def put(key, value)
