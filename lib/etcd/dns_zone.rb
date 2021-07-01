@@ -16,4 +16,20 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
   def list_all
     super.select { |dns| dns.dig("metadata", "zone") }
   end
+
+  private
+
+  def put(key, value)
+    raise ArgumentError.new('Unsupported values keys') unless allowed_values?(value)
+
+    postfix = generate_postfix
+    key = "/#{@client.prefix}/#{key.split('.').reverse.join('/')}"
+    payload = { key: Base64.encode64(key), value: Base64.encode64(value.to_json) }.to_json
+    response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/put", :post, {}, payload)
+    if response.code == 200
+      payload 
+    else
+      response.code
+    end
+  end
 end
