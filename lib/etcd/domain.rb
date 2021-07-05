@@ -10,12 +10,12 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
   def delete(data = {})
     data = HashWithIndifferentAccessCustom.new(data).attributes
     hostname = nil
+    puts "IM HERE"
+    puts list
     if data[:name]
       hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
     elsif data[:host]
       hostname = list.select { |record| record["host"] == data[:host] }[0]["hostname"]
-    elsif list.first.dig("metadata","zone")
-      hostname = "apex.dns.#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
     end
     remove(hostname) if hostname
   end

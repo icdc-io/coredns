@@ -17,6 +17,11 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
     super.select { |dns| dns.dig("metadata", "zone") }
   end
 
+  def delete(data = {})
+    hostname = "#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
+    remove(hostname)
+  end
+
   private
 
   def put(key, value)
