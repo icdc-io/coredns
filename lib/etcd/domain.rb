@@ -10,8 +10,6 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
   def delete(data = {})
     data = HashWithIndifferentAccessCustom.new(data).attributes
     hostname = nil
-    puts "IM HERE"
-    puts list
     if data[:name]
       hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
     elsif data[:host]
@@ -93,10 +91,8 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
 
   def put(key, value)
     raise ArgumentError.new('Unsupported values keys') unless allowed_values?(value)
-
-    postfix = generate_postfix
-    key = "/#{@client.prefix}/#{key.split('.').reverse.join('/')}/#{postfix}"
-    #(value.keys - VALUES_WHITELIST).each { |k| value.delete(k) }
+    [:txt, :cname].include?(record_type(value)) ? postfix = nil : postfix = "/#{generate_postfix}"
+    key = "/#{@client.prefix}/#{key.split('.').reverse.join('/')}#{postfix}"
     payload = { key: Base64.encode64(key), value: Base64.encode64(value.to_json) }.to_json
     response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/put", :post, {}, payload)
     if response.code == 200
@@ -112,11 +108,28 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
     }.to_json
     response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
     if response.code == 200
-      payload 
+      hostname 
     else
       response.code
     end
   rescue StandardError => e
     @logger.error(e.message)
+  end
+
+  def record_type(record)
+    require 'resolv'
+    if record.keys.include?(:text)
+      return :txt
+    elsif record.keys.include?(:mail)
+      return :mx
+    elsif record.keys.include?(:port)
+      return :srv
+    elsif Resolv::IPv4::Regex.match?(record[:host])
+      return :a
+    elsif Resolv::IPv6::Regex.match?(record[:host])
+      return :aaaa
+    else
+      return :cname
+    end
   end
 end
