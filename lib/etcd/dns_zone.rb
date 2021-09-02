@@ -5,12 +5,8 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
   VALUES_WHITELIST = %w[metadata].freeze 
 
   def add(data = {})
-    #begin
-    # data[:imetadata][:zone] = true
+    data[:imetadata][:zone] = true
     put(@namespace, HashWithIndifferentAccessCustom.new(data).attributes)
-   # rescue => err
-   #    "#{err}--#{data[:metadata].nil?}--#{data.inspect}"
-#    end
   end
 
   def list(level = 1)

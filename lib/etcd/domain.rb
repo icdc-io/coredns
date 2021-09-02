@@ -86,7 +86,7 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
       next
     end.compact
   rescue StandardError
-     []
+    []
   end
 
   def put(key, value)
