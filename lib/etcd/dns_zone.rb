@@ -17,9 +17,37 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
     super.select { |dns| dns.dig("metadata", "zone") }
   end
 
-  def delete(data = {})
-    hostname = "#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
-    remove(hostname)
+  def subzones
+    @client.domain(@namespace).list_all
+      .select{ |domain| domain.dig("metadata", "zone") }
+      .map { |zone_hash| @client.zone("#{zone_hash["name"]}.#{namespace}") }
+  end
+
+  def records
+    zone_records = fetch('').select{ |record| record if record.dig("group")&.end_with?("#{@namespace}") }
+    subzones.collect(&:namespace).map do |subzone_name|
+      zone_records.reject! { |record| record.dig("group")&.end_with?("#{subzone_name}") }
+    end
+    zone_records.map do |record|
+      hostname = record.delete("hostname")
+      record.merge!({"name" => (hostname.split('/').reverse - @namespace.split('.') - [@client.prefix]).reject!(&:empty?).join('.')})
+    end
+  end
+
+  def delete
+    to_remove = []
+    results = []
+    records.each do |record|
+      # delete records in this zone
+      record_hostname = "#{record["name"]}.#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
+      to_remove << record_hostname
+    end
+    zone_name = "#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
+    to_remove << zone_name
+    to_remove.each do |name|
+      results << remove(name)
+    end
+    results
   end
 
   private

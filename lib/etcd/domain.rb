@@ -44,7 +44,7 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
       record.merge!({"name" => (hostname.split('/').reverse - @namespace.split('.') - [@client.prefix]).reject!(&:empty?).join('.')})
     end
   end
-
+  
   def list_all
     fetch('').map do |record|
       hostname = record.delete("hostname")
@@ -73,7 +73,7 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
     hostname = [hostname, @namespace.split('.')].flatten.compact.join('.')[1..-1] unless @namespace == hostname
     payload = {
       key: Base64.encode64("/#{@client.prefix}/#{hostname.split('.').reverse.join('/')}/"),
-      range_end: Base64.encode64("/#{@client.prefix}/#{hostname.split('.').reverse.join('/')}~")
+      range_end: Base64.encode64("/#{@client.prefix}/#{hostname.split('.').reverse.join('/')}/~")
     }.to_json
     response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/range", :post, {}, payload)
     JSON.parse(response)['kvs']
