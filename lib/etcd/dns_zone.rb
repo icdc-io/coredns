@@ -17,49 +17,34 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
     super.select { |dns| dns.dig("metadata", "zone") }
   end
 
-  def list_subzones
-    result = []
-    fetch('').each do |record|
-     metadata_element = record.dig("metadata", "zone")
-     subzone_exists = record["hostname"].include?("/#{@client.prefix}/#{@namespace.split('.').reverse.join('/')}/") && !metadata_element.nil?  && (metadata_element == true)
-      test ="/#{@client.prefix}/#{@namespace.split('.').reverse.join('/')}/"
-     subzone_data   = record["hostname"].split('/').reverse.join('.')[0..-2]
-     result << subzone_data if subzone_exists
-    end
-    result
+  def subzones
+    @client.domain(@namespace).list_all
+      .select{ |domain| domain.dig("metadata", "zone") }
+      .map { |zone_hash| @client.zone("#{zone_hash["name"]}.#{namespace}") }
   end
 
-  def list_records
-    result = []
-    one_level_records = []
-    fetch('').each do |record|
-      levels_difference = (record["hostname"].sub("/#{@client.prefix}/#{@namespace.split('.').reverse.join('/')}/",
-                                                  '')).split('/')
-      test = record["hostname"].sub("/#{@client.prefix}/#{@namespace.split('.').reverse.join('/')}/",'')
-      if levels_difference.count == 1
-        one_level_records << record
-      end
+  def records
+    zone_records = fetch('').select{ |record| record if record.dig("group")&.end_with?("#{@namespace}") }
+    subzones.collect(&:namespace).map do |subzone_name|
+      zone_records.reject! { |record| record.dig("group")&.end_with?("#{subzone_name}") }
     end
-    one_level_records.map do |record|
-     result << record unless record.dig("metadata", "zone")
-    end
-    result.map do |record|
+    zone_records.map do |record|
       hostname = record.delete("hostname")
       record.merge!({"name" => (hostname.split('/').reverse - @namespace.split('.') - [@client.prefix]).reject!(&:empty?).join('.')})
     end
   end
 
-  def delete(data = {})
-    hosts = []
+  def delete
+    to_remove = []
     results = []
-    list_records.each do |record|
+    records.each do |record|
       # delete records in this zone
       record_hostname = "#{record["name"]}.#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
-      hosts << record_hostname
+      to_remove << record_hostname
     end
-    hostname = "#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
-    hosts << hostname
-    hosts.each do |name|
+    zone_name = "#{@namespace}./#{@client.prefix}".split('.').reverse.join('/')
+    to_remove << zone_name
+    to_remove.each do |name|
       results << remove(name)
     end
     results
