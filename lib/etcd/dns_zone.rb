@@ -30,7 +30,8 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
     end
     zone_records.map do |record|
       hostname = record.delete("hostname")
-      record.merge!({"name" => (hostname.split('/').reverse - @namespace.split('.') - [@client.prefix]).reject!(&:empty?).join('.')})
+      #record.merge!({"name" => (hostname.split('/').reverse - @namespace.split('.') - [@client.prefix]).reject!(&:empty?).join('.')})
+      record.merge!({"name" => hostname.split("/").reverse.reject(&:empty?).join(".").gsub(".#{@namespace}.#{@client.prefix}", "")})
     end
   end
 
