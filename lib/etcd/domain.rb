@@ -41,18 +41,25 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
     end
     one_level_records.map do |record|
       hostname = record.delete("hostname")
-      record.merge!({"name" => hostname.split("/").reverse.reject(&:empty?).join(".").gsub(".#{@namespace}.#{@client.prefix}", "")})
+      name = format_name hostname.split("/").reverse.reject(&:empty?).join(".")
+      record.merge!({"name" => name})
     end
   end
-  
+
   def list_all
     fetch('').map do |record|
       hostname = record.delete("hostname")
-      record.merge!({"name" => hostname.split("/").reverse.reject(&:empty?).join(".").gsub(".#{@namespace}.#{@client.prefix}", "")})
+      name = format_name hostname.split("/").reverse.reject(&:empty?).join(".")
+      record.merge!({"name" => name})
     end
   end
 
   private
+
+  def format_name(name)
+    [@namespace, @client.prefix].reject(&:empty?).each { |part| name.gsub!(".#{part}", "") }
+    name
+  end
 
   def allowed_values?(data)
     (data.keys - VALUES_WHITELIST).empty? ? false : true
