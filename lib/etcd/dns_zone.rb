@@ -23,6 +23,14 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain # CoreDns::Domain
       .map { |zone_hash| @client.zone("#{zone_hash["name"]}.#{namespace}") }
   end
 
+  def parent_zone
+    @namespace = @namespace.split('.')[1..-1].join('.')
+    return nil if @namespace.empty?
+    zone_hash = @client.zone(@namespace).show
+    return @client.zone(@namespace) if zone_hash
+    parent_zone
+  end
+
   def records
     zone_records = fetch('').select{ |record| record if record.dig("group")&.end_with?("#{@namespace}") }
     subzones.collect(&:namespace).map do |subzone_name|
