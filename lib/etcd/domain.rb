@@ -99,6 +99,7 @@ class CoreDns::Etcd::Domain < CoreDns::Domain
   def put(key, value)
     raise ArgumentError.new('Unsupported values keys') unless allowed_values?(value)
     #[:txt].include?(record_type(value)) ? postfix = nil : postfix = "/#{generate_postfix}"
+    postfix = "/#{generate_postfix}"
     key = "/#{@client.prefix}/#{key.split('.').reverse.join('/')}#{postfix}"
     payload = { key: Base64.encode64(key), value: Base64.encode64(value.to_json) }.to_json
     response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/put", :post, {}, payload)
