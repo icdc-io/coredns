@@ -1,5 +1,6 @@
 # frozen_string_literal: true
-require 'rest_client'
+
+require "rest_client"
 module CoreDns
   module Helpers
     class RequestHelper

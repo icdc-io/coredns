@@ -3,22 +3,22 @@
 require_relative "lib/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = 'coredns'
+  spec.name          = "coredns"
   spec.version       = CoreDns::VERSION
-  spec.authors       = ['Aliaksei Hrechushkin']
-  spec.email         = ['ahrechushkin@ibagoup.eu']
+  spec.authors       = ["Aliaksei Hrechushkin"]
+  spec.email         = ["ahrechushkin@ibagoup.eu"]
 
-  spec.summary       = 'Interface for manageiq coredns'
-  spec.description   = 'Interface for coredns + etcd (as provider)'
-  spec.homepage      = 'https://icdc.io'
-  spec.required_ruby_version = Gem::Requirement.new('>= 2.5.0')
-  spec.licenses    = ['Apache-2.0']
+  spec.summary       = "Wrapper for coredns-etcd application"
+  spec.description   = "Gem which provide simple way to control DNS records."
+  spec.homepage      = "https://icdc.io"
+  spec.required_ruby_version = Gem::Requirement.new(">= 3.0")
+  spec.licenses = ["Apache-2.0"]
 
-  spec.metadata['allowed_push_host'] = "TODO: Set to 'http://mygemserver.com'"
+  spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
 
-  spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = 'https://git.zby.icdc.io/ahrechushkin/coredns-etcd'
-  spec.metadata['changelog_uri'] = 'https://git.zby.icdc.io/ahrechushkin/coredns-etcd'
+  spec.metadata["homepage_uri"] = spec.homepage
+  spec.metadata["source_code_uri"] = "https://git.zby.icdc.io/ahrechushkin/coredns-etcd"
+  spec.metadata["changelog_uri"] = "https://git.zby.icdc.io/ahrechushkin/coredns-etcd"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
