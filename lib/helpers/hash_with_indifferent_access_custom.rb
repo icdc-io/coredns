@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 class HashWithIndifferentAccessCustom
   attr_reader :keys, :values, :attributes
-  
+
   def initialize(hash = {})
-    @attributes = Hash.new
+    @attributes = {}
     hash.each { |key, val| self[key] = val }
     @keys = @attributes.keys
     @values = @attributes.values
@@ -17,7 +19,7 @@ class HashWithIndifferentAccessCustom
   end
 
   def self.[](*arr)
-    self.new(Hash[*arr])
+    new(Hash[*arr])
   end
 
   def delete(key)
@@ -25,7 +27,7 @@ class HashWithIndifferentAccessCustom
     self.class.new(@attributes)
   end
 
-  def to_json
+  def to_json(*_args)
     @attributes.to_json
   end
 end
