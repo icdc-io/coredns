@@ -2,7 +2,7 @@
 A simple way to control your dns records managed by [coredns-etcd application](https://coredns.io/plugins/etcd/)
 
 ## Requirements
-ruby >= 3.0
+ruby >= 2.7
 
 ## Installation
 

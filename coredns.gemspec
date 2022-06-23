@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary       = "Wrapper for coredns-etcd application"
   spec.description   = "Gem which provide simple way to control DNS records."
   spec.homepage      = "https://icdc.io"
-  spec.required_ruby_version = Gem::Requirement.new(">= 3.0")
+  spec.required_ruby_version = Gem::Requirement.new(">= 2.7")
   spec.licenses = ["Apache-2.0"]
 
   spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
