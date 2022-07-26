@@ -15,7 +15,7 @@ module CoreDns
         data = HashWithIndifferentAccessCustom.new(data).attributes
         hostname = nil
         if data[:name]
-          hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}".split(".").reverse.join("/")
+          hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}".split(".").compact.reverse.join("/")
         elsif data[:host]
           hostname = list.select { |record| record["host"] == data[:host] }[0]["hostname"]
         end
