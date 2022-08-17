@@ -92,5 +92,5 @@ ENV["COREDNS_VERSION"], default is "v3" (also tested v3beta)
 > coredns.domain('domain1.your.zone').show
 
 # Delete domain
-> coredns.domain('domain1.your.zone').delete
+> coredns.domain('domain1.your.zone').delete({:params})
 ```
