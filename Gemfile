@@ -12,3 +12,8 @@ gem "rspec", "~> 3.0"
 gem "rubocop", "~> 1.7"
 
 gem "rest-client", "~> 2.0"
+
+group :test do
+  gem "webmock"
+  gem "simplecov", require: false
+end

@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
-RSpec.describe Coredns do
-  it "has a version number" do
-    expect(Coredns::VERSION).not_to be nil
-  end
+require './spec/shared_params.rb'
 
-  it "does something useful" do
-    expect(false).to eq(true)
+RSpec.describe CoreDns::Etcd do
+  include_context 'shared params'
+
+  describe '::new' do
+    it 'creates a connection object' do # TODO Default params ENV
+      expect(coredns.class).to eq(CoreDns::Etcd) # eq(described_class)
+    end
   end
 end
