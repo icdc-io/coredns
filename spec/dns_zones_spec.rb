@@ -34,14 +34,14 @@ RSpec.describe CoreDns::Etcd::DnsZone do
     before { stub_request(:post, put_url) }
 
     it 'adds a new DNS zone' do
-      pending 'fix zone true'
       key = "/skydns/#{zone_name.split('.').reverse.join('/')}"
-      value = params.to_json
+      value = params
+      value[:metadata].merge!(zone: true)
       encoded_key = Base64.encode64 key
-      encoded_value = Base64.encode64 value
-      expected_result = {key: encoded_key, value: encoded_value}
+      encoded_value = Base64.encode64 value.to_json
+      expected_result = {key: encoded_key, value: encoded_value}.to_json
 
-      expect(zone).to eq(JSON.generate(expected_result))
+      expect(zone).to eq(expected_result)
     end
 
     it 'sends a post request to the etcd server' do
