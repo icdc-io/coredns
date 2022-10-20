@@ -5,7 +5,6 @@ require './spec/shared_params.rb'
 RSpec.describe CoreDns::Etcd::DnsZone do
   include_context 'shared params'
 
-  let(:zone_name) { 'dns.zone.name' }
   let(:owner_name) { 'owner_name' }
   let(:metadata) { {owner: owner_name} }
   let(:params) { {metadata: metadata} }

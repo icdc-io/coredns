@@ -3,17 +3,15 @@ RSpec.shared_context 'shared params' do
   let(:etcd_url) { 'etcd.server.url.example' }
   let(:coredns) { CoreDns::Etcd.new(etcd_url) }
 
-  let(:range_url) { 'http://etcd.server.url.example:2379/v3/kv/range' }
-  let(:put_url) { 'http://etcd.server.url.example:2379/v3/kv/put' }
-
-  let(:deleterange_url) do
-    'http://etcd.server.url.example:2379/v3/kv/deleterange'
-  end
+  let(:zone_name) { 'dns.zone.name' }
+  let(:put_url) { "#{coredns.api_url}/kv/put" }
+  let(:range_url) { "#{coredns.api_url}/kv/range" }
+  let(:deleterange_url) { "#{coredns.api_url}/kv/deleterange" }
 
   let(:range_request_body) do
     {
-      key: Base64.encode64('/skydns//'),
-      range_end: Base64.encode64('/skydns/~')
+      key: Base64.encode64("/#{coredns.prefix}//"),
+      range_end: Base64.encode64("/#{coredns.prefix}/~")
     }.to_json
   end
 
