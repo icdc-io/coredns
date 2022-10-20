@@ -6,8 +6,14 @@ require_relative "../helpers/request_helper"
 
 module CoreDns
   class Etcd
-    class Domain < CoreDns::Domain
+    class Domain
       class Error < StandardError; end
+        attr_reader :namespace
+
+        def initialize(client, hostname = "")
+          @namespace = hostname
+          @client = client
+        end
 
       VALUES_WHITELIST = %w[host mail port priority text ttl group].freeze
 
@@ -20,10 +26,6 @@ module CoreDns
           hostname = list.select { |record| record["host"] == data[:host] }[0]["hostname"]
         end
         remove(hostname) if hostname
-      end
-
-      def get(hostname)
-        self.class.new(@client, "#{hostname}.#{@namespace}")
       end
 
       def add(data = {})
@@ -107,7 +109,6 @@ module CoreDns
       def put(key, value)
         raise ArgumentError, "Unsupported values keys" unless allowed_values?(value)
 
-        # [:txt].include?(record_type(value)) ? postfix = nil : postfix = "/#{generate_postfix}"
         postfix = "/#{generate_postfix}"
         key = "/#{@client.prefix}/#{key.split(".").reverse.join("/")}#{postfix}"
         payload = { key: Base64.encode64(key), value: Base64.encode64(value.to_json) }.to_json
@@ -127,18 +128,6 @@ module CoreDns
         response.code == 200 ? hostname : response.code
       rescue StandardError => e
         @logger.error(e.message)
-      end
-
-      def record_type(record)
-        require "resolv"
-        if record.keys.include?("text") then :txt
-        elsif record.keys.include?("mail") then :mx
-        elsif record.keys.include?("port") then :srv
-        elsif Resolv::IPv4::Regex.match?(record["host"]) then :a
-        elsif Resolv::IPv6::Regex.match?(record["host"]) then :aaaa
-        elsif record["name"].match?(/ns.dns/) then :ns
-        else
-          :cname end
       end
     end
   end
