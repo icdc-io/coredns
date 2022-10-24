@@ -3,37 +3,38 @@
 require "logger"
 require_relative "../helpers/hash_with_indifferent_access_custom"
 require_relative "../helpers/request_helper"
+require_relative '../helpers/put_request'
 
 module CoreDns
   class Etcd
     class Domain
       class Error < StandardError; end
-        attr_reader :namespace
+      attr_reader :namespace
 
-        def initialize(client, hostname = "")
-          @namespace = hostname
-          @client = client
-        end
-
-      VALUES_WHITELIST = %w[host mail port priority text ttl group].freeze
+      def initialize(client, hostname = '')
+        @namespace = hostname
+        @client = client
+      end
 
       def delete(data = {})
         data = HashWithIndifferentAccessCustom.new(data).attributes
         hostname = nil
         if data[:name]
-          hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}".split(".").compact.reverse.join("/")
+          hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}"
+            .split(".").compact.reverse.join("/")
         elsif data[:host]
-          hostname = list.select { |record| record["host"] == data[:host] }[0]["hostname"]
+          hostname = list
+            .select { |record| record["host"] == data[:host] }[0]["hostname"]
         end
         remove(hostname) if hostname
       end
 
       def add(data = {})
-        put(@namespace, HashWithIndifferentAccessCustom.new(data).attributes)
+        CoreDns::Helpers::PutRequest.put(key, HashWithIndifferentAccessCustom.new(data).attributes, @client)
       end
 
       def show
-        self.class.new(@client, "").list_all.select { |x| x["name"] == namespace }[0]
+        self.class.new(@client, '').list_all.select { |x| x['name'] == namespace }[0]
       end
 
       def list(level = 1)
@@ -55,40 +56,56 @@ module CoreDns
       end
 
       def list_all
-        fetch("").map do |record|
-          hostname = record.delete("hostname")
-          name = format_name hostname.split("/").reverse.reject(&:empty?).join(".")
-          record.merge!({ "name" => name })
+        fetch('').map do |record|
+          hostname = record.delete('hostname')
+          name = format_name(hostname.split("/").reverse.reject(&:empty?).join("."))
+          record.merge!({ 'name' => name })
         end
       end
 
       private
 
       def format_name(name)
-        [@namespace, @client.prefix].reject(&:empty?).each { |part| name.gsub!(".#{part}", "") }
+        [@namespace, @client.prefix].reject(&:empty?)
+          .each { |part| name.gsub!(".#{part}", '') }
         name
       end
 
-      def allowed_values?(data)
-        (data.keys - VALUES_WHITELIST).empty? ? false : true
+      def available_postfix(postfixes)
+        postfixes_range = (1..postfixes.count + 1).map do |i|
+          "#{@client.postfix}#{i + 1}"
+        end
+        (postfixes_range - postfixes).first
       end
 
-      def generate_postfix
-        postfixes = list.collect { |record| record["name"] }.map { |key| key.split("/").last }
+      def postfix
+        postfixes = list.map { |record| record['name'].split('/').last }
         if postfixes.empty?
           "#{@client.postfix}1"
         else
-          ((1..postfixes.count + 1).map { |i| "#{@client.postfix}#{i + 1}" } - postfixes).first
+          available_postfix(postfixes)
         end
       end
 
+      def transform_hostname(hostname)
+        hostname = [hostname, @namespace.split('.')].flatten.compact
+          .join('.')[1..]
+      end
+
       def fetch(hostname)
-        hostname = [hostname, @namespace.split(".")].flatten.compact.join(".")[1..] unless @namespace == hostname
+        hostname = transform_hostname(hostname) unless @namespace == hostname
+
+        prefix = @client.prefix
+        key = "/#{prefix}/#{hostname.split('.').reverse.join('/')}/"
+        range_end = "/#{prefix}/#{hostname.split('.').reverse.join('/')}~"
+
         payload = {
-          key: Base64.encode64("/#{@client.prefix}/#{hostname.split(".").reverse.join("/")}/"),
-          range_end: Base64.encode64("/#{@client.prefix}/#{hostname.split(".").reverse.join("/")}~")
+          key: Base64.encode64(key),
+          range_end: Base64.encode64(range_end)
         }.to_json
-        response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/range", :post, {}, payload)
+
+        response = CoreDns::Helpers::RequestHelper
+          .request("#{@client.api_url}/kv/range", :post, {}, payload)
         parsed_response(response)
       rescue StandardError
         []
@@ -106,25 +123,18 @@ module CoreDns
         end.compact
       end
 
-      def put(key, value)
-        raise ArgumentError, "Unsupported values keys" unless allowed_values?(value)
-
-        postfix = "/#{generate_postfix}"
-        key = "/#{@client.prefix}/#{key.split(".").reverse.join("/")}#{postfix}"
-        payload = { key: Base64.encode64(key), value: Base64.encode64(value.to_json) }.to_json
-        response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/put", :post, {}, payload)
-        if response.code == 200
-          payload
-        else
-          response.code
-        end
+      def key
+        prefix = @client.prefix
+        namespace = @namespace.split(".").reverse.join("/")
+        "/#{prefix}/#{namespace}/#{postfix}"
       end
 
       def remove(hostname)
         payload = {
           key: Base64.encode64(hostname)
         }.to_json
-        response = CoreDns::Helpers::RequestHelper.request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
+        response = CoreDns::Helpers::RequestHelper
+          .request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
         response.code == 200 ? hostname : response.code
       rescue StandardError => e
         @logger.error(e.message)
