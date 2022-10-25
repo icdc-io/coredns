@@ -18,16 +18,19 @@ RSpec.describe CoreDns::Etcd do
     end
 
     it 'creates a connection object with custom params' do
+      cached_env_variables = []
+      cached_env_variables << ENV['COREDNS_PORT'] << ENV['COREDNS_PREFIX'] <<
+                              ENV['COREDNS_VERSION'] << ENV['COREDNS_POSTFIX']
       ENV['COREDNS_PORT']    = port    = '9732'
-      ENV['COREDNS_VERSION'] = version = 'v5'
       ENV['COREDNS_PREFIX']  = prefix  = 'sky'
+      ENV['COREDNS_VERSION'] = version = 'v5'
       ENV['COREDNS_POSTFIX'] = postfix = 'y'
 
       custom_params = coredns.api_url.split(':')[-1].split('/')
       custom_params << coredns.prefix << coredns.postfix
 
-      ENV['COREDNS_PORT'] = ENV['COREDNS_VERSION'] =
-        ENV['COREDNS_PREFIX'] = ENV['COREDNS_POSTFIX'] = nil
+      ENV['COREDNS_PORT'], ENV['COREDNS_PREFIX'],
+        ENV['COREDNS_VERSION'], ENV['COREDNS_POSTFIX'] = cached_env_variables
 
       expect(custom_params).to eq([port, version, prefix, postfix])
     end
