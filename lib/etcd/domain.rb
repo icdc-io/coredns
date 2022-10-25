@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "logger"
-require_relative "../helpers/hash_with_indifferent_access_custom"
-require_relative "../helpers/request_helper"
+require 'logger'
+require_relative '../helpers/hash_with_indifferent_access_custom'
+require_relative '../helpers/request_helper'
 require_relative '../helpers/put_request'
 
 module CoreDns
@@ -21,49 +21,51 @@ module CoreDns
         hostname = nil
         if data[:name]
           hostname = "#{data.delete(:name)}.#{@namespace}./#{@client.prefix}"
-            .split(".").compact.reverse.join("/")
+            .split('.').compact.reverse.join('/')
         elsif data[:host]
           hostname = list
-            .select { |record| record["host"] == data[:host] }[0]["hostname"]
+            .select { |record| record['host'] == data[:host] }[0]['hostname']
         end
         remove(hostname) if hostname
       end
 
       def add(data = {})
-        CoreDns::Helpers::PutRequest.put(key, HashWithIndifferentAccessCustom.new(data).attributes, @client)
+        PutRequest.put(key, data, @client) # TODO PutRequest -_-
       end
 
       def show
-        self.class.new(@client, '').list_all.select { |x| x['name'] == namespace }[0]
+        self.class.new(@client, '').list_all
+          .select { |x| x['name'] == namespace }[0]
       end
 
       def list(level = 1)
         one_level_records(level).map do |record|
-          hostname = record.delete("hostname")
-          name = format_name hostname.split("/").reverse.reject(&:empty?).join(".")
-          record.merge!({ "name" => name })
-        end
-      end
-
-      def one_level_records(level)
-        fetch("").each do |record|
-          levels_difference = (record["hostname"].sub("/#{@client.prefix}/#{@namespace.split(".").reverse.join("/")}",
-                                                      "")).split("/")[1..]
-          next unless levels_difference.count == level
-
-          record
+          hostname = record.delete('hostname')
+          name = format_name(hostname.split('/').reverse.reject(&:empty?)
+            .join('.'))
+          record.merge!({'name' => name})
         end
       end
 
       def list_all
         fetch('').map do |record|
           hostname = record.delete('hostname')
-          name = format_name(hostname.split("/").reverse.reject(&:empty?).join("."))
-          record.merge!({ 'name' => name })
+          name = format_name(hostname.split('/').reverse.reject(&:empty?)
+            .join('.'))
+          record.merge!({'name' => name })
         end
       end
 
       private
+
+      def one_level_records(level)
+        fetch('').each do |record|
+          levels_difference = (record['hostname'].sub("/#{@client.prefix}/#{@namespace.split('.').reverse.join('/')}", '')).split('/')[1..]
+          next unless levels_difference.count == level
+
+          record
+        end.compact
+      end
 
       def format_name(name)
         [@namespace, @client.prefix].reject(&:empty?)
@@ -112,12 +114,11 @@ module CoreDns
       end
 
       def parsed_response(response)
-        JSON.parse(response)["kvs"]
-            .map do |encoded_hash|
-          [{ "hostname" => Base64.decode64(encoded_hash["key"]) }, JSON.parse(Base64.decode64(encoded_hash["value"]))]
-            .reduce(
-              {}, :merge
-            )
+        JSON.parse(response)['kvs'].map do |encoded_hash|
+          [
+            {'hostname' => Base64.decode64(encoded_hash['key'])},
+            JSON.parse(Base64.decode64(encoded_hash['value']))
+          ].reduce({}, :merge)
         rescue StandardError
           next
         end.compact
@@ -125,14 +126,12 @@ module CoreDns
 
       def key
         prefix = @client.prefix
-        namespace = @namespace.split(".").reverse.join("/")
+        namespace = @namespace.split('.').reverse.join('/')
         "/#{prefix}/#{namespace}/#{postfix}"
       end
 
       def remove(hostname)
-        payload = {
-          key: Base64.encode64(hostname)
-        }.to_json
+        payload = {key: Base64.encode64(hostname)}.to_json
         response = CoreDns::Helpers::RequestHelper
           .request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
         response.code == 200 ? hostname : response.code

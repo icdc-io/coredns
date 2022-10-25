@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require_relative "../helpers/hash_with_indifferent_access_custom"
-# require_relative "../helpers/request_helper"
-# require_relative '../helpers/put_request'
 
 # CoreDns::Domain
 module CoreDns
@@ -12,19 +10,15 @@ module CoreDns
 
       def add(data = {})
         data[:metadata][:zone] = true
-        Helpers::PutRequest.put(
-          key,
-          HashWithIndifferentAccessCustom.new(data).attributes,
-          @client
-        )
+        PutRequest.put(key, data, @client)
       end
 
       def list(level = 1)
-        super.select { |record| record.dig("metadata", "zone") }
+        super.select { |record| record.dig('metadata', 'zone') }
       end
 
       def list_all
-        super.select { |dns| dns.dig("metadata", "zone") }
+        super.select { |dns| dns.dig('metadata', 'zone') }
       end
 
       def subzones
@@ -34,7 +28,7 @@ module CoreDns
       end
 
       def parent_zone
-        @namespace = @namespace.split(".")[1..].join(".")
+        @namespace = @namespace.split('.')[1..].join('.')
         return nil if @namespace.empty?
 
         zone_hash = @client.zone(@namespace).show
@@ -44,8 +38,8 @@ module CoreDns
       end
 
       def fetch_zone_records
-        fetch("").select do |record|
-          record if record["group"]&.end_with?(@namespace.to_s)
+        fetch('').select do |record|
+          record if record['group']&.end_with?(@namespace.to_s)
         end
       end
 
@@ -53,22 +47,25 @@ module CoreDns
         zone_records = fetch_zone_records
 
         subzones.collect(&:namespace).map do |subzone_name|
-          zone_records.reject! { |record| record["group"]&.end_with?(subzone_name.to_s) }
+          zone_records.reject! do |record|
+            record['group']&.end_with?(subzone_name.to_s)
+          end
         end
 
         zone_records.map do |record|
-          hostname = record.delete("hostname")
-          record.merge!({ "name" => hostname.split("/").reverse.reject(&:empty?).join(".").gsub(
-            ".#{@namespace}.#{@client.prefix}", ""
-          ) })
+          hostname = record.delete('hostname')
+          name = hostname.split('/').reverse.reject(&:empty?).join('.')
+            .gsub(".#{@namespace}.#{@client.prefix}", '')
+          record.merge!({'name' => name})
         end
       end
 
       def delete
         to_remove = []
         results = []
+        prefix = @client.prefix
         records.each { |record| to_remove << get_hostname(record) }
-        zone_name = "#{@namespace}./#{@client.prefix}".split(".").reverse.join("/")
+        zone_name = "#{@namespace}./#{prefix}".split('.').reverse.join('/')
         to_remove << zone_name
         to_remove.each do |name|
           results << remove(name)
