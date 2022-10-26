@@ -10,7 +10,26 @@ RSpec.describe CoreDns::Etcd::DnsZone do
   let(:params) { {metadata: metadata} }
 
   describe '#list' do
-    let(:zones) { coredns.zone('').list }
+    let(:zones) { coredns.zone('').list(1) }
+
+    before do
+      stub_request(:post, range_url).with(body: range_request_body)
+        .to_return(body: show_response_body)
+    end
+
+    it 'returns DNS zones of an appropriate level' do
+      expect(zones.count).to eq(1)
+    end
+
+    it "sends a post request to the etcd server" do
+      zones
+
+      expect(WebMock).to have_requested(:post, range_url)
+    end
+  end
+
+  describe '#list_all' do
+    let(:zones) { coredns.zone('').list_all }
 
     before do
       stub_request(:post, range_url).with(body: range_request_body)

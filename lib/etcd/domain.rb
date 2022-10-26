@@ -39,27 +39,17 @@ module CoreDns
       end
 
       def list(level = 1)
-        one_level_records(level).map do |record|
-          hostname = record.delete('hostname')
-          name = format_name(hostname.split('/').reverse.reject(&:empty?)
-            .join('.'))
-          record.merge!({'name' => name})
-        end
+        one_level_records(level).map { |record| format_record record }
       end
 
       def list_all
-        fetch('').map do |record|
-          hostname = record.delete('hostname')
-          name = format_name(hostname.split('/').reverse.reject(&:empty?)
-            .join('.'))
-          record.merge!({'name' => name })
-        end
+        fetch('').map { |record| format_record record }
       end
 
       private
 
       def one_level_records(level)
-        fetch('').each do |record|
+        fetch('').map do |record|
           levels_difference = (record['hostname'].sub("/#{@client.prefix}/#{@namespace.split('.').reverse.join('/')}", '')).split('/')[1..]
           next unless levels_difference.count == level
 
@@ -71,6 +61,13 @@ module CoreDns
         [@namespace, @client.prefix].reject(&:empty?)
           .each { |part| name.gsub!(".#{part}", '') }
         name
+      end
+
+      def format_record(record)
+        hostname = record.delete('hostname')
+        name = format_name(hostname.split('/').reverse.reject(&:empty?)
+          .join('.'))
+        record.merge!({'name' => name })
       end
 
       def available_postfix(postfixes)
