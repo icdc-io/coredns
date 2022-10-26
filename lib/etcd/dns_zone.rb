@@ -46,9 +46,9 @@ module CoreDns
       def records
         zone_records = fetch_zone_records
 
-        subzones.collect(&:namespace).map do |subzone_name|
+        subzones.map do |subzone|
           zone_records.reject! do |record|
-            record['group']&.end_with?(subzone_name.to_s)
+            record['group']&.end_with?(subzone.namespace.to_s)
           end
         end
 
