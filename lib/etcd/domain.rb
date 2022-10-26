@@ -4,7 +4,6 @@ require "logger"
 require_relative "../helpers/hash_with_indifferent_access_custom"
 require_relative "../helpers/request_helper"
 require_relative "../helpers/put_request"
-require_relative "../helpers/formatting_helper"
 
 module CoreDns
   class Etcd
@@ -16,6 +15,8 @@ module CoreDns
         @namespace = hostname
         @client = client
       end
+
+      VALUES_WHITELIST = %w[host mail port priority text ttl group].freeze
 
       def delete(data = {})
         data = HashWithIndifferentAccessCustom.new(data).attributes
@@ -31,7 +32,7 @@ module CoreDns
       end
 
       def add(data = {})
-        PutRequest.put(key, data, @client) # TODO: PutRequest -_-
+        PutRequest.put(key, data, @client, VALUES_WHITELIST) # TODO: PutRequest -_-
       end
 
       def show
@@ -89,13 +90,11 @@ module CoreDns
         end
       end
 
-      def transform_hostname(hostname)
-        [hostname, @namespace.split(".")].flatten.compact
-                                         .join(".")[1..]
-      end
-
       def fetch(hostname)
-        hostname = transform_hostname(hostname) unless @namespace == hostname
+        unless @namespace == hostname
+          hostname =
+            [hostname, @namespace.split(".")].flatten.compact.join(".")[1..]
+        end
 
         prefix = @client.prefix
         key = "/#{prefix}/#{hostname.split(".").reverse.join("/")}/"

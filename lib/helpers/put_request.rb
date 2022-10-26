@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
 class PutRequest
-  VALUES_WHITELIST = %w[host mail port priority text ttl group].freeze # TODO: change for a specific classes (as an argument for put method)
-
-  def self.put(key, value, client)
-    raise ArgumentError, "Unsupported values keys" unless (value.keys - VALUES_WHITELIST).empty? ? false : true
+  def self.put(key, value, client, values_whitelist)
+    raise ArgumentError, "Unsupported values keys" unless (value.keys - values_whitelist).empty? ? false : true
 
     value = HashWithIndifferentAccessCustom.new(value).attributes.to_json
     payload = {
