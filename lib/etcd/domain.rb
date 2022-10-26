@@ -128,15 +128,6 @@ module CoreDns
         namespace = @namespace.split(".").reverse.join("/")
         "/#{prefix}/#{namespace}/#{postfix}"
       end
-
-      # def remove(hostname)
-      #   payload = { key: Base64.encode64(hostname) }.to_json
-      #   response = CoreDns::Helpers::RequestHelper
-      #              .request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
-      #   response.code == 200 ? hostname : response.code
-      # rescue StandardError => e
-      #   @logger.error(e.message)
-      # end
     end
   end
 end
