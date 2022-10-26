@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class PutRequest
+class Request
   def self.put(key, value, client, values_whitelist)
     raise ArgumentError, "Unsupported values keys" unless (value.keys - values_whitelist).empty? ? false : true
 

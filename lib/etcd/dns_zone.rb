@@ -10,7 +10,7 @@ module CoreDns
 
       def add(data = {})
         data[:metadata][:zone] = true
-        PutRequest.put(key, data, @client, VALUES_WHITELIST)
+        Request.put(key, data, @client, VALUES_WHITELIST)
       end
 
       def list(level = 1)

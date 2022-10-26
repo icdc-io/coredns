@@ -3,7 +3,7 @@
 require "logger"
 require_relative "../helpers/hash_with_indifferent_access_custom"
 require_relative "../helpers/request_helper"
-require_relative "../helpers/put_request"
+require_relative "../helpers/request"
 
 module CoreDns
   class Etcd
@@ -32,7 +32,7 @@ module CoreDns
       end
 
       def add(data = {})
-        PutRequest.put(key, data, @client, VALUES_WHITELIST) # TODO: PutRequest -_-
+        Request.put(key, data, @client, VALUES_WHITELIST)
       end
 
       def show
