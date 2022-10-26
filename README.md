@@ -54,9 +54,18 @@ ENV["COREDNS_VERSION"], default is "v3" (also tested v3beta)
 
 ### DNS Zones
 ```ruby
-# List dns zones
-> coredns.zone('').list
+# List all dns zones
+> coredns.zone('').list_all
 => []
+
+# List dns zones of the specified level (1 by default)
+> coredns.zone('dns.zone').list
+=> [{"metadata"=>{...}, "name"=>"sub1"},
+    {"metadata"=>{...}, "name"=>"bar"}]
+
+> coredns.zone('dns.zone').list(2)
+=> [{"metadata"=>{...}, "name"=>"sub2.sub1"},
+    {"metadata"=>{...}, "name"=>"foo.bar"}]
 
 # Show information about selected dns zone
 > coredns.zone('your.zone').show
@@ -69,14 +78,12 @@ ENV["COREDNS_VERSION"], default is "v3" (also tested v3beta)
 > coredns.zone('sub1.your.zone').parent_zone
 
 # Create a new dns zone
-
 > coredns.zone('new.your.zone').add({metadata: {...additional metadata infromation...}})
 
 # Delete existing dns zone
 > coredns.zone('new.your.zone').delete
 
 # List dns zone records
-
 > coredns.zone('your.zone').records
 ```
 
@@ -92,5 +99,5 @@ ENV["COREDNS_VERSION"], default is "v3" (also tested v3beta)
 > coredns.domain('domain1.your.zone').show
 
 # Delete domain
-> coredns.domain('domain1.your.zone').delete({:params})
+> coredns.domain('domain1.your.zone').delete({params})
 ```
