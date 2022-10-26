@@ -62,7 +62,7 @@ module CoreDns
                     .split(".").reverse.join("/")
         to_remove << zone_name
         to_remove.each do |name|
-          results << Request.remove(name, @client)
+          results << Request.remove(name, @client, @logger)
         end
         results
       end
@@ -70,7 +70,7 @@ module CoreDns
       private
 
       def fetch_zone_records
-        fetch("").select do |record|
+        Request.fetch("", @namespce, @client).select do |record|
           record if record["group"]&.end_with?(@namespace.to_s)
         end
       end

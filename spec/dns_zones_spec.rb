@@ -123,9 +123,9 @@ RSpec.describe CoreDns::Etcd::DnsZone do
       expect(@returned_value).to eq(expected_value)
     end
 
-    it "sends a post request to the etcd server twice" do
+    it "sends a post request to the etcd server" do
       expect(WebMock).to have_requested(:post, range_url)
-        .with(body: range_body).twice
+        .with(body: range_body)
     end
 
     it "sends a post request to the etcd server" do

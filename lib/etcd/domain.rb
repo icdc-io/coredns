@@ -2,7 +2,6 @@
 
 require "logger"
 require_relative "../helpers/hash_with_indifferent_access_custom"
-require_relative "../helpers/request_helper"
 require_relative "../helpers/request"
 
 module CoreDns
@@ -28,7 +27,7 @@ module CoreDns
           hostname = list
                      .select { |record| record["host"] == data[:host] }[0]["hostname"]
         end
-        Request.remove(hostname, @client) if hostname
+        Request.remove(hostname, @client, @logger) if hostname
       end
 
       def add(data = {})
@@ -46,13 +45,13 @@ module CoreDns
       end
 
       def list_all
-        fetch("").map { |record| format_record record }
+        Request.fetch("", @namespace, @client).map { |record| format_record record }
       end
 
       private
 
       def one_level_records(level)
-        fetch("").map do |record|
+        Request.fetch("", @namespace, @client).map do |record|
           levels_difference = (record["hostname"].sub("/#{@client.prefix}/#{@namespace.split(".").reverse.join("/")}",
                                                       "")).split("/")[1..]
           next unless levels_difference.count == level
@@ -88,39 +87,6 @@ module CoreDns
         else
           available_postfix(postfixes)
         end
-      end
-
-      def fetch(hostname)
-        unless @namespace == hostname
-          hostname =
-            [hostname, @namespace.split(".")].flatten.compact.join(".")[1..]
-        end
-
-        prefix = @client.prefix
-        key = "/#{prefix}/#{hostname.split(".").reverse.join("/")}/"
-        range_end = "/#{prefix}/#{hostname.split(".").reverse.join("/")}~"
-
-        payload = {
-          key: Base64.encode64(key),
-          range_end: Base64.encode64(range_end)
-        }.to_json
-
-        response = CoreDns::Helpers::RequestHelper
-                   .request("#{@client.api_url}/kv/range", :post, {}, payload)
-        parsed_response(response)
-      rescue StandardError
-        []
-      end
-
-      def parsed_response(response)
-        JSON.parse(response)["kvs"].map do |encoded_hash|
-          [
-            { "hostname" => Base64.decode64(encoded_hash["key"]) },
-            JSON.parse(Base64.decode64(encoded_hash["value"]))
-          ].reduce({}, :merge)
-        rescue StandardError
-          next
-        end.compact
       end
 
       def key
