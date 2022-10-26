@@ -28,7 +28,7 @@ module CoreDns
           hostname = list
                      .select { |record| record["host"] == data[:host] }[0]["hostname"]
         end
-        remove(hostname) if hostname
+        Request.remove(hostname, @client) if hostname
       end
 
       def add(data = {})
@@ -129,14 +129,14 @@ module CoreDns
         "/#{prefix}/#{namespace}/#{postfix}"
       end
 
-      def remove(hostname)
-        payload = { key: Base64.encode64(hostname) }.to_json
-        response = CoreDns::Helpers::RequestHelper
-                   .request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
-        response.code == 200 ? hostname : response.code
-      rescue StandardError => e
-        @logger.error(e.message)
-      end
+      # def remove(hostname)
+      #   payload = { key: Base64.encode64(hostname) }.to_json
+      #   response = CoreDns::Helpers::RequestHelper
+      #              .request("#{@client.api_url}/kv/deleterange", :post, {}, payload)
+      #   response.code == 200 ? hostname : response.code
+      # rescue StandardError => e
+      #   @logger.error(e.message)
+      # end
     end
   end
 end

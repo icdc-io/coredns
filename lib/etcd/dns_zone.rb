@@ -62,7 +62,7 @@ module CoreDns
                     .split(".").reverse.join("/")
         to_remove << zone_name
         to_remove.each do |name|
-          results << remove(name)
+          results << Request.remove(name, @client)
         end
         results
       end

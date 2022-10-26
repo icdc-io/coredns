@@ -12,4 +12,13 @@ class Request
     response = CoreDns::Helpers::RequestHelper.request("#{client.api_url}/kv/put", :post, {}, payload)
     response.code == 200 ? payload : response.code
   end
+
+  def self.remove(hostname, client)
+    payload = { key: Base64.encode64(hostname) }.to_json
+    response = CoreDns::Helpers::RequestHelper
+               .request("#{client.api_url}/kv/deleterange", :post, {}, payload)
+    response.code == 200 ? hostname : response.code
+  rescue StandardError => e
+    # @logger.error(e.message)
+  end
 end
