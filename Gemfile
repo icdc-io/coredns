@@ -14,6 +14,6 @@ gem "rubocop", "~> 1.7"
 gem "rest-client", "~> 2.0"
 
 group :test do
-  gem "webmock"
   gem "simplecov", require: false
+  gem "webmock"
 end

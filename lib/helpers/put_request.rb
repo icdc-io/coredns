@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 class PutRequest
-  VALUES_WHITELIST = %w[host mail port priority text ttl group].freeze # TODO change for a specific classes (as an argument for put method)
+  VALUES_WHITELIST = %w[host mail port priority text ttl group].freeze # TODO: change for a specific classes (as an argument for put method)
 
   def self.put(key, value, client)
     raise ArgumentError, "Unsupported values keys" unless (value.keys - VALUES_WHITELIST).empty? ? false : true
