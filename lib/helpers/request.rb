@@ -15,12 +15,12 @@ class Request
     response.code == 200 ? payload : response.code
   end
 
-  def self.remove(hostname, client, _logger)
+  def self.remove(hostname, client, logger)
     payload = { key: Base64.encode64(hostname) }.to_json
     response = request("#{client.api_url}/kv/deleterange", :post, {}, payload)
     response.code == 200 ? hostname : response.code
   rescue StandardError => e
-    @logger.error(e.message)
+    logger.error(e.message)
   end
 
   def self.fetch(hostname, namespace, client)
