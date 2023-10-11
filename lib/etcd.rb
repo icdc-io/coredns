@@ -16,11 +16,19 @@ class CoreDns::Etcd
   end
 
   def domain(hostname)
+    unless hostname.empty? && hostname.match?(/\A(?:(?!-)(?!.*--)[a-zA-Z0-9_][a-zA-Z0-9-_]{1,62}\.)+[a-zA-Z]{2,}\z/)
+      raise RuntimeError.new "Invalid hostname"
+    end
+
     CoreDns::Etcd::Domain.new(self, hostname)
   end
 
-  def zone(hostname)
-    CoreDns::Etcd::DnsZone.new(self, hostname)
+  def zone(domain)
+    unless domain.empty?
+      raise RuntimeError.new "Invalid domain" unless domain.match? /\A(?:(?!-)(?!.*--)[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}\z/
+    end
+
+    CoreDns::Etcd::DnsZone.new(self, domain)
   end
 
   private
