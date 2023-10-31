@@ -24,8 +24,9 @@ class CoreDns::Etcd
   end
 
   def zone(domain)
+    
     unless domain.empty?
-      raise RuntimeError.new "Invalid domain" unless domain.match? /\A(?:(?!-)(?!.*--)[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}\z/
+      raise RuntimeError.new "Invalid domain" unless domain.match?(/\A(?:(?!-)(?!.*--)[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}\z/)
     end
 
     CoreDns::Etcd::DnsZone.new(self, domain)
