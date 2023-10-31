@@ -28,7 +28,7 @@ class CoreDns::Etcd::DnsZone < CoreDns::Etcd::Domain
 
   def parent_zone
     @namespace = @namespace.split(".")[1..].join(".")
-    return nil if @namespace.empty?
+    return nil if @namespace.empty? || !@namespace.include?(".")
 
     zone_hash = @client.zone(@namespace).show
     return @client.zone(@namespace) if zone_hash
