@@ -1,12 +1,13 @@
 PATH
   remote: .
   specs:
-    coredns (1.0)
+    coredns (1.2.5)
 
 GEM
   remote: https://rubygems.org/
   specs:
     ast (2.4.2)
+    base64 (0.2.0)
     diff-lcs (1.5.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
@@ -63,6 +64,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  base64 (~> 0.2.0)
   coredns!
   rake (~> 13.0)
   rest-client (~> 2.0)
