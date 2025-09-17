@@ -14,3 +14,5 @@ gem "rubocop", "~> 1.7"
 gem "rest-client", "~> 2.0"
 
 gem "base64", "~> 0.2.0"
+
+gem "simpleidn", "~> 0.2.3"
