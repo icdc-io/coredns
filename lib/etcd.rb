@@ -3,6 +3,7 @@
 require "base64"
 require "json"
 require "logger"
+require "simpleidn"
 
 class CoreDns::Etcd
   attr_reader :api_url, :prefix, :postfix
@@ -17,7 +18,7 @@ class CoreDns::Etcd
 
   def domain(hostname)
     unless hostname.empty?
-      raise RuntimeError.new "Invalid hostname" unless hostname.match?(/\A(?:(?!-)(?!.*--)[a-zA-Z0-9\-\_]{1,63}\.)+[a-zA-Z]{2,}\z/)
+      raise RuntimeError.new "Invalid hostname" unless SimpleIDN.to_unicode(hostname).match?(/\A(?:(?!-)(?!.*--)[а-яА-Яa-zA-Z0-9\-\_]{1,63}\.)+[а-яА-Яa-zA-Z]{2,}\z/)
     end
 
     CoreDns::Etcd::Domain.new(self, hostname)
@@ -26,7 +27,7 @@ class CoreDns::Etcd
   def zone(domain)
     
     unless domain.empty?
-      raise RuntimeError.new "Invalid domain" unless domain.match?(/\A(?:(?!-)(?!.*--)[a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,}\z/)
+      raise RuntimeError.new "Invalid domain" unless SimpleIDN.to_unicode(domain).match?(/\A(?:(?!-)(?!.*--)[а-яА-Яa-zA-Z0-9]{1,63}\.)+[а-яА-Яa-zA-Z]{2,}\z/)
     end
 
     CoreDns::Etcd::DnsZone.new(self, domain)
