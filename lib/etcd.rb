@@ -18,7 +18,7 @@ class CoreDns::Etcd
 
   def domain(hostname)
     unless hostname.empty?
-      raise RuntimeError.new "Invalid hostname" unless SimpleIDN.to_unicode(hostname).match?(/\A(?:(?!-)(?!.*--)[а-яА-Яa-zA-Z0-9\-\_]{1,63}\.)+[а-яА-Яa-zA-Z]{2,}\z/)
+      raise RuntimeError.new "Invalid hostname" unless SimpleIDN.to_unicode(hostname).match?(/\A(?:(?!-)(?!.*--)[\p{L}\p{N}_][\p{L}\p{N}\-\_]{0,62}\.)+[\p{L}]{2,}\z/)
     end
 
     CoreDns::Etcd::Domain.new(self, hostname)
@@ -27,7 +27,7 @@ class CoreDns::Etcd
   def zone(domain)
     
     unless domain.empty?
-      raise RuntimeError.new "Invalid domain" unless SimpleIDN.to_unicode(domain).match?(/\A(?:(?!-)(?!.*--)[а-яА-Яa-zA-Z0-9]{1,63}\.)+[а-яА-Яa-zA-Z]{2,}\z/)
+      raise RuntimeError.new "Invalid domain" unless SimpleIDN.to_unicode(domain).match?(/\A(?:(?!-)(?!.*--)[\p{L}\p{N}-]{1,63}\.)+[\p{L}]{2,}\z/)
     end
 
     CoreDns::Etcd::DnsZone.new(self, domain)
