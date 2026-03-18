@@ -1,7 +1,8 @@
 PATH
   remote: .
   specs:
-    coredns (1.2.6)
+    coredns (1.2.8)
+      simpleidn (~> 0.2.3)
 
 GEM
   remote: https://rubygems.org/
